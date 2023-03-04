@@ -31,7 +31,7 @@ public class WebClientConfiguration {
                     connection.addHandlerLast(new WriteTimeoutHandler(TIMEOUT, TimeUnit.MILLISECONDS));
                 });
 
-        log.info("Adjusted the HTTP Timeout to {} seconds", TimeUnit.MICROSECONDS.toSeconds(TIMEOUT));
+        log.info("Adjusted the HTTP Timeout to {} seconds", TimeUnit.MILLISECONDS.toSeconds(TIMEOUT));
         log.info("Changed the default base URL for WebClient to: {}", BASE_URL);
 
         return WebClient.builder()
