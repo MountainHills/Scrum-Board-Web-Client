@@ -1,7 +1,9 @@
 package com.pagejump.scrumboardwebclient.service;
 
+import com.pagejump.scrumboardwebclient.dto.TaskRequestDTO;
 import com.pagejump.scrumboardwebclient.model.Task;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -13,8 +15,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ScrumBoardService {
-    private final WebClient webClient;
+    private WebClient webClient;
+
+    // For testing.
+    public ScrumBoardService(String baseURL) {
+        this.webClient = WebClient.create(baseURL);
+    }
 
     public List<Task> getAllTasks() {
         return webClient.get()
@@ -32,6 +40,7 @@ public class ScrumBoardService {
                 .block();
     }
 
+    // Not necessary.
     public Mono<Task> getTaskByIdAsync(long taskId) {
         return webClient.get()
                 .uri("/" + taskId)
@@ -39,38 +48,40 @@ public class ScrumBoardService {
                 .bodyToMono(Task.class);
     }
 
+    // Not necessary.
     public Flux<Task> getAllTasksAsync() {
         return webClient.get()
                 .retrieve()
                 .bodyToFlux(Task.class);
     }
 
-    public Task createTask(String requestBody) {
+    public Task createTask(TaskRequestDTO taskRequestDTO) {
+        log.info("I've entered the createTask function with the ff info.: {}", taskRequestDTO.toString() );
         return webClient.post()
-                .uri("/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .body(BodyInserters.fromValue(taskRequestDTO))
                 .retrieve()
                 .bodyToMono(Task.class)
                 .block();
     }
 
-    public String deleteTask(long taskId) {
+    public void deleteTask(long taskId) {
+        log.info("I'm inside the deleteTask function.");
         webClient.delete()
                 .uri("/" + taskId)
                 .retrieve()
-                .bodyToMono(Task.class);
-
-        return "I deleted task with id = " + taskId;
+                .bodyToMono(Void.class)
+                .block();
     }
 
-    public Task updateTask(long taskId, String requestBody) {
+    public Task updateTask(long taskId, TaskRequestDTO taskRequestDTO) {
+        log.info("I'm inside the updateTask function with id = {}, and taskRequestDTO with ff info: {}", taskId, taskRequestDTO.toString());
         return webClient.put()
                 .uri("/" + taskId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(requestBody))
+                .body(BodyInserters.fromValue(taskRequestDTO))
                 .retrieve()
                 .bodyToMono(Task.class)
                 .block();
