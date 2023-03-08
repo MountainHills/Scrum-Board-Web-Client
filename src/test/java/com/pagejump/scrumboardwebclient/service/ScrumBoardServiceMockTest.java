@@ -1,34 +1,23 @@
 package com.pagejump.scrumboardwebclient.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.pagejump.scrumboardwebclient.dto.TaskRequestDTO;
 import com.pagejump.scrumboardwebclient.model.Task;
-import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.asm.Advice;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
-import org.junit.Before;
 import org.junit.jupiter.api.*;
-import org.junit.platform.commons.util.CollectionUtils;
-import org.mockito.Mock;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import reactor.test.StepVerifier;
 
 import java.io.IOException;
-import java.sql.SQLOutput;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ScrumBoardServiceTest {
+class ScrumBoardServiceMockTest {
     /*
     * References:
     * https://www.youtube.com/watch?v=GBKY8QyfNDk
