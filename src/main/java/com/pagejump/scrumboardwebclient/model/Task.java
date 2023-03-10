@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Task {
-    private long id;
+    private String id;
     private String title;
     private String description;
     private String status;

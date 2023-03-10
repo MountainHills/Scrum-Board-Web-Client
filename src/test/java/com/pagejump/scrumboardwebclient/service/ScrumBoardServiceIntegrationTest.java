@@ -10,35 +10,38 @@ import com.pagejump.scrumboardwebclient.exception.TaskAlreadyDeletedException;
 import com.pagejump.scrumboardwebclient.exception.TaskNotFoundException;
 import com.pagejump.scrumboardwebclient.model.Task;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
+@SpringBootTest
 class ScrumBoardServiceIntegrationTest {
     /*
-    * References:
-    * https://dzone.com/articles/7-popular-unit-test-naming - Naming Conventions
-    * https://www.baeldung.com/spring-webclient-get-response-body
-    * https://stackoverflow.com/questions/4105795/pretty-print-json-in-java
-    */
+     * References:
+     * https://dzone.com/articles/7-popular-unit-test-naming - Naming Conventions
+     * https://www.baeldung.com/spring-webclient-get-response-body
+     * https://stackoverflow.com/questions/4105795/pretty-print-json-in-java
+     */
 
+    // Constants
+    private final String DOES_NOT_EXIST_ID = "21ce319b-0eae-41d5-b25a-016122d5798b"; // Random UUID. It doesn't exist.
+    private final String DOES_EXIST_ID = "3ac096ec-1282-4e76-b1b0-4923a5aa05eb";
+    private final String DELETE_ID = "afb67416-8fd6-4484-8bb6-94be533cfe66";
+    private final String UPDATE_ID = "87dc9fa0-af6f-4078-b084-31de854056bc";
+    private final String ALREADY_DELETED_ID = "e9dd1432-d788-4553-a56f-3783fc0e9371";
+    @Autowired
     private ScrumBoardService scrumBoardService;
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    @BeforeEach
-    void setup() {
-        String baseURL = "http://localhost:8080/api/v1/tasks";
-        scrumBoardService = new ScrumBoardService(baseURL);
-    }
-
     @Test
     void createTask_ValidTaskRequest_Task() {
-        TaskRequestDTO sampleCreateTask = new TaskRequestDTO("Created Title 3", "Created description 3", "TODO");
+        TaskRequestDTO sampleCreateTask = new TaskRequestDTO(
+                "Created Title 3", "Created description 3", "TODO");
         Task sampleCreatedTaskResponse = scrumBoardService.createTask(sampleCreateTask);
 
         assertNotNull(sampleCreatedTaskResponse);
@@ -81,19 +84,16 @@ class ScrumBoardServiceIntegrationTest {
 
     @Test
     void getTaskById_DoesExists_Task() {
-        long sampleId = 1;
-        Task sampleTask = scrumBoardService.getTaskById(sampleId);
+        Task sampleTask = scrumBoardService.getTaskById(DOES_EXIST_ID);
 
         assertNotNull(sampleTask);
-        log.info("The task with id = {} has the following information: {}", sampleId, gson.toJson(sampleTask));
+        log.info("The task with id = {} has the following information: {}", DOES_EXIST_ID, gson.toJson(sampleTask));
     }
 
     @Test
     void getTaskById_DoesNotExist_ExceptionThrown() {
-        long invalidId = 1000;
-
         Exception e = assertThrows(TaskNotFoundException.class,
-                () -> scrumBoardService.getTaskById(invalidId),
+                () -> scrumBoardService.getTaskById(DOES_NOT_EXIST_ID),
                 "Invalid ids should throw");
 
         JsonElement je = JsonParser.parseString(e.getMessage());
@@ -102,17 +102,14 @@ class ScrumBoardServiceIntegrationTest {
 
     @Test
     void deleteTask_DoesExist_Void() {
-        long sampleDeleteTaskId = 1;
-        assertDoesNotThrow(() -> scrumBoardService.deleteTask(sampleDeleteTaskId));
-        log.info("The task with id = {} has been deleted", sampleDeleteTaskId);
+        assertDoesNotThrow(() -> scrumBoardService.deleteTask(DELETE_ID));
+        log.info("The task with id = {} has been deleted", DELETE_ID);
     }
 
     @Test
     void deleteTask_DoesNotExist_ExceptionThrown() {
-        long invalidId = 1000;
-
         Exception e = assertThrows(TaskNotFoundException.class,
-                () -> scrumBoardService.deleteTask(invalidId),
+                () -> scrumBoardService.deleteTask(DOES_NOT_EXIST_ID),
                 "Any tasks that can't be found should throw an error.");
 
         JsonElement je = JsonParser.parseString(e.getMessage());
@@ -121,9 +118,8 @@ class ScrumBoardServiceIntegrationTest {
 
     @Test
     void deleteTask_DeletedTask_ExceptionThrown() {
-        long alreadyDeletedId = 2;
         Exception e = assertThrows(TaskAlreadyDeletedException.class,
-                () -> scrumBoardService.deleteTask(alreadyDeletedId),
+                () -> scrumBoardService.deleteTask(ALREADY_DELETED_ID),
                 "Any tasks that is already deleted and tries to be deleted again should throw an error.");
 
         JsonElement je = JsonParser.parseString(e.getMessage());
@@ -132,23 +128,23 @@ class ScrumBoardServiceIntegrationTest {
 
     @Test
     void updateTask() {
-        long sampleUpdateId = 3;
-        TaskRequestDTO sampleUpdateTask = new TaskRequestDTO("Updated Task", "Updated Description", "DONE");
-        Task sampleUpdateTaskResponse = scrumBoardService.updateTask(sampleUpdateId, sampleUpdateTask);
+        TaskRequestDTO sampleUpdateTask = new TaskRequestDTO(
+                "Updated Task", "Updated Description", "DONE");
 
-        assertNotNull(sampleUpdateId);
+        Task sampleUpdateTaskResponse = scrumBoardService.updateTask(UPDATE_ID, sampleUpdateTask);
+
+        assertNotNull(sampleUpdateTaskResponse);
         log.info("Update task with id = {}. The new updated task now contains: {}",
-                sampleUpdateId, gson.toJson(sampleUpdateTaskResponse));
+                DOES_EXIST_ID, gson.toJson(sampleUpdateTaskResponse));
     }
 
     @Test
     void updateTask_InvalidTaskStatus_ExceptionThrown() {
-        long taskIdToUpdate = 3;
         TaskRequestDTO taskWithInvalidStatus = new TaskRequestDTO(
                 "Something", "Something here", "INVALID STATUS");
 
         Exception e = assertThrows(InvalidTaskRequestException.class,
-                () -> scrumBoardService.updateTask(taskIdToUpdate, taskWithInvalidStatus),
+                () -> scrumBoardService.updateTask(UPDATE_ID, taskWithInvalidStatus),
                 "Invalid status inputs should throw");
 
         JsonElement je = JsonParser.parseString(e.getMessage());
@@ -157,11 +153,11 @@ class ScrumBoardServiceIntegrationTest {
 
     @Test
     void updateTask_InvalidTitle_ExceptionThrown() {
-        long taskIdToUpdate = 3;
-        TaskRequestDTO taskWithInvalidTitle = new TaskRequestDTO(null, "Something", "TODO");
+        TaskRequestDTO taskWithInvalidTitle = new TaskRequestDTO(
+                null, "Something", "TODO");
 
         Exception e = assertThrows(InvalidTaskRequestException.class,
-                () -> scrumBoardService.updateTask(taskIdToUpdate, taskWithInvalidTitle),
+                () -> scrumBoardService.updateTask(UPDATE_ID, taskWithInvalidTitle),
                 "Invalid title inputs should throw");
 
         JsonElement je = JsonParser.parseString(e.getMessage());
@@ -170,12 +166,11 @@ class ScrumBoardServiceIntegrationTest {
 
     @Test
     void updateTask_DeletedTask_ExceptionThrown() {
-        long taskIdThatIsDeleted = 2;
         TaskRequestDTO sampleUpdateTask = new TaskRequestDTO(
                 "Updated Task", "Updated Description", "DONE");
 
         Exception e = assertThrows(TaskAlreadyDeletedException.class,
-                () -> scrumBoardService.updateTask(taskIdThatIsDeleted, sampleUpdateTask),
+                () -> scrumBoardService.updateTask(ALREADY_DELETED_ID, sampleUpdateTask),
                 "Any updates to a deleted task should be thrown.");
 
         JsonElement je = JsonParser.parseString(e.getMessage());
@@ -184,12 +179,11 @@ class ScrumBoardServiceIntegrationTest {
 
     @Test
     void updateTask_DoesNotExist_ExceptionThrown() {
-        long taskIdThatDoesNotExist = 1000;
         TaskRequestDTO sampleUpdateTask = new TaskRequestDTO(
                 "Updated Task", "Updated Description", "DONE");
 
         Exception e = assertThrows(TaskNotFoundException.class,
-                () -> scrumBoardService.updateTask(taskIdThatDoesNotExist, sampleUpdateTask),
+                () -> scrumBoardService.updateTask(DOES_NOT_EXIST_ID, sampleUpdateTask),
                 "Any invalid task id should throw.");
 
         JsonElement je = JsonParser.parseString(e.getMessage());
@@ -197,7 +191,6 @@ class ScrumBoardServiceIntegrationTest {
     }
 
     @Test
-    @Disabled
     void sampleTest() {
         // Create Task 1
         TaskRequestDTO createTask1 = new TaskRequestDTO(
@@ -217,33 +210,30 @@ class ScrumBoardServiceIntegrationTest {
 
         assertNotEquals(taskCreated1, taskCreated2);
 
-        // Update Task 1
-        long updateTaskId = 4;
+        // Updates the first created task.
+        String updateTaskId = taskCreated1.getId();
         TaskRequestDTO updateTaskRequest = new TaskRequestDTO(
-                "Updated Task 4", "Updated Description 4", "DONE");
+                "Updated the Created Task", "Updated the Description", "DONE");
         Task updatedTask = scrumBoardService.updateTask(updateTaskId, updateTaskRequest);
 
         assertNotNull(updatedTask);
         log.info("Update task with id = {}. The new updated task now contains: {}", updateTaskId, gson.toJson(updatedTask));
 
-        // Delete Task 3 -- Task # 1 is the task that was created before this test.
-        long deleteTaskId = 4;
-        assertDoesNotThrow(() -> scrumBoardService.deleteTask(deleteTaskId));
-        log.info("The task with id = {} has been deleted", deleteTaskId);
+        // Deletes the second created task.
+        assertDoesNotThrow(() -> scrumBoardService.deleteTask(taskCreated2.getId()));
+        log.info("The task with id = {} has been deleted", taskCreated2.getId());
 
         // Get All Tasks (Both deleted and not deleted)
         List<Task> taskList = scrumBoardService.getAllTasks();
         log.info("The contents are: {}", gson.toJson(taskList));
 
-        // Get ID of an existing task. Ex. 5
-        long existingTaskId = 5;
-        Task existingTask = scrumBoardService.getTaskById(existingTaskId);
-        log.info("The task with id = {} has the following information: {}", existingTaskId, gson.toJson(existingTask));
+        // Get ID of an existing task.
+        Task existingTask = scrumBoardService.getTaskById(taskCreated1.getId());
+        log.info("The task with id = {} has the following information: {}", taskCreated1.getId(), gson.toJson(existingTask));
 
         // Get ID that does not exist. Ex. 1000
-        long nonExistingTask = 1000;
         Exception e = assertThrows(TaskNotFoundException.class,
-                () -> scrumBoardService.getTaskById(nonExistingTask)
+                () -> scrumBoardService.getTaskById(DOES_NOT_EXIST_ID)
         );
 
         JsonElement je = JsonParser.parseString(e.getMessage());
